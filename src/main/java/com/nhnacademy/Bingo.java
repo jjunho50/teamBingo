@@ -187,26 +187,35 @@ class Bingo extends Thread {
 
             int index = -1;
             boolean validInput = false;
+            boolean printOnlyOne = false; // ErrorMessage는 한번만 띄운다 (사유 : 꼴보기 싫음)
 
             // 유효 입력 판별
             while (!validInput) {
-                index = Integer.parseInt(in.readLine()); // 바꿀 숫자
-                int location = getIndex(index); // 입력된 위치의 숫자
+                try {
+                    index = Integer.parseInt(in.readLine()); // 바꿀 숫자
+                    int location = getIndex(index); // 입력된 위치의 숫자
 
-                // 유효한 입력인지 확인하고 중복된 입력이 아닌 경우에만 진행
-                if (index >= 1 && index <= 25 && !changed[location / 5][location % 5]) {
-                    validInput = true;
+                    // 유효한 입력인지 확인하고 중복된 입력이 아닌 경우에만 진행
+                    if (index >= 1 && index <= 25 && !changed[location / 5][location % 5]) {
+                        validInput = true;
 
-                    int secondLocation = second.getIndex(index);
-                    changed[location / 5][location % 5] = true; // 해당 셀은 변경됨.
-                    second.changed[secondLocation / 5][secondLocation % 5] = true; // 다른 플레이어의 셀도 변경
+                        int secondLocation = second.getIndex(index);
+                        changed[location / 5][location % 5] = true; // 해당 셀은 변경됨.
+                        second.changed[secondLocation / 5][secondLocation % 5] = true; // 다른 플레이어의 셀도 변경
 
-                    board[location / 5][location % 5] = figure; // 내 보드 변경
-                    second.board[secondLocation / 5][secondLocation % 5] = figure; // 다른 플레이어 보드 변경
+                        board[location / 5][location % 5] = figure; // 내 보드 변경
+                        second.board[secondLocation / 5][secondLocation % 5] = figure; // 다른 플레이어 보드 변경
 
-                } else {
-                    if (this.equals(first))
-                        send("잘못된 입력입니다. 다시 입력하세요: ");
+                    } else {
+                        if (this.equals(first))
+                            send("잘못된 입력입니다. 다시 입력하세요: ");
+                    }
+                } catch (NumberFormatException e) {
+                    // 숫자로 변환할 수 없는 입력 처리
+                    if (this.equals(first) && !printOnlyOne) {
+                        send("숫자를 입력하세요: ");
+                        printOnlyOne = true;
+                    }
                 }
 
             }
