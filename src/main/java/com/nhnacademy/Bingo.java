@@ -13,6 +13,7 @@ import java.util.NoSuchElementException;
 import java.util.Random;
 
 class Bingo extends Thread {
+    private final String[] BINGO = { "B", "I", "N", "G", "O" };
     static List<Bingo> serverList = new LinkedList<>();
     static String[] figures = { "O", "X" };
 
@@ -227,17 +228,29 @@ class Bingo extends Thread {
         }
     }
 
-    private boolean check(String figure) {
+    private boolean check(String figure) throws IOException {
 
-        // 가로
+        // 가로 ("BINGO로 변경")
         for (int i = 0; i < 5; i++) {
             int cnt = 0;
             for (int j = 0; j < 5; j++) {
-                if (board[i][j].equals(figure))
+                if (board[i][j].equals(figure)) {
                     cnt++;
+
+                    if (cnt == 5) {
+                        for (int k = 0; k < 5; k++) {
+                            board[i][k] = BINGO[k]; // BINGO!!
+                        }
+
+                        Bingo winner = this;
+                        for (Bingo server : serverList) {
+                            server.send(winner.showBoard());
+                        }
+                        return true;
+                    }
+                }
+
             }
-            if (cnt == 5)
-                return true;
         }
 
         // 세로
@@ -247,8 +260,18 @@ class Bingo extends Thread {
                 if (board[i][j].equals(figure))
                     cnt++;
             }
-            if (cnt == 5)
+
+            if (cnt == 5) {
+                for (int k = 0; k < 5; k++) {
+                    board[k][j] = BINGO[k]; // BINGO!!
+                }
+
+                Bingo winner = this;
+                for (Bingo server : serverList) {
+                    server.send(winner.showBoard());
+                }
                 return true;
+            }
         }
         // 좌 대각선
         int cnt = 0;
@@ -256,8 +279,17 @@ class Bingo extends Thread {
             if (board[i][i].equals(figure))
                 cnt++;
 
-            if (cnt == 5)
+            if (cnt == 5) {
+                for (int j = 0; j < 5; j++) {
+                    board[j][j] = BINGO[j];
+                }
+
+                Bingo winner = this;
+                for (Bingo server : serverList) {
+                    server.send(winner.showBoard());
+                }
                 return true;
+            }
         }
 
         // 우 대각선
@@ -267,8 +299,17 @@ class Bingo extends Thread {
             if (board[i][j].equals(figure))
                 cnt++;
 
-            if (cnt == 5)
+            if (cnt == 5) {
+                for (int k = 0, l = 4; k < 5; k++, l--) {
+                    board[k][l] = BINGO[k]; // BINGO!!
+                }
+
+                Bingo winner = this;
+                for (Bingo server : serverList) {
+                    server.send(winner.showBoard());
+                }
                 return true;
+            }
         }
 
         return false;
