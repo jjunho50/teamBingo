@@ -1,7 +1,7 @@
 package com.nhnacademy;
 
-public class Main {
+class TicTacToe extends Thread {
     public static void main(String[] args) {
-        System.out.println("Hello world!");
+        System.out.println("Hello World!");
     }
 }
