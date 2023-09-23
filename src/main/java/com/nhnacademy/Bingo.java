@@ -12,7 +12,6 @@ public class Bingo extends Thread {
     static List<Bingo> serverList = new LinkedList<>();
     static String[] figures = { "O", "X" };
 
-    static boolean firstSetting = true;
     static int count = 0;
     static int order = 0;
 
@@ -114,50 +113,40 @@ public class Bingo extends Thread {
                 }
             }
 
+            send("게임을 시작합니다. 빙고판은 랜덤으로 생성됩니다.");
+
+            for (int i = 0; i < 5; i++) {
+                for (int j = 0; j < 5; j++) {
+                    board[i][j] = String.valueOf((i * 5 + j) + 1);
+                }
+            }
+
+            // 1~25의 숫자 섞기
+            Random rd = new Random();
+            for (int i = 0; i < 5; i++) {
+                for (int j = 0; j < 5; j++) {
+                    int a = rd.nextInt(5);
+                    int b = rd.nextInt(5);
+
+                    String tmp;
+                    tmp = board[i][j];
+                    board[i][j] = board[a][b];
+                    board[a][b] = tmp;
+                }
+            }
+
+            send(showBoard());
+
+            setFigure(figures[Integer.parseInt(userName)]);
+
+            String message = (figure.equals("O")) ? "선공입니다! (O)" : "후공입니다! (X)";
+            send(message + "\n");
+
             while (!Thread.currentThread().isInterrupted()) {
-                if (serverList.size() == 1) {
-                    // send("다른 플레이어의 입장을 기다려 주세요.\n");
-                } else if (serverList.size() == 2) {
-
-                    // 선공, 후공이 정해진 이후로는 출력되지 않습니다.
-                    if (firstSetting) {
-                        send("게임을 시작합니다. 빙고판은 랜덤으로 생성됩니다.");
-
-                        for (int i = 0; i < 5; i++) {
-                            for (int j = 0; j < 5; j++) {
-                                board[i][j] = String.valueOf((i * 5 + j) + 1);
-                            }
-                        }
-
-                        // 1~25의 숫자 섞기
-                        Random rd = new Random();
-                        for (int i = 0; i < 5; i++) {
-                            for (int j = 0; j < 5; j++) {
-                                int a = rd.nextInt(5);
-                                int b = rd.nextInt(5);
-
-                                String tmp;
-                                tmp = board[i][j];
-                                board[i][j] = board[a][b];
-                                board[a][b] = tmp;
-                            }
-                        }
-
-                        send(showBoard());
-
-                        setFigure(figures[Integer.parseInt(userName)]);
-
-                        String message = (figure.equals("O")) ? "선공입니다! (O)" : "후공입니다! (X)";
-                        send(message + "\n");
-
-                        firstSetting = false;
-                    }
-
-                    if (count % 2 == 0) {
-                        playGameInOrder(in, getServer("0"), getServer("1"));
-                    } else {
-                        playGameInOrder(in, getServer("1"), getServer("0"));
-                    }
+                if (count % 2 == 0) {
+                    playGameInOrder(in, getServer("0"), getServer("1"));
+                } else {
+                    playGameInOrder(in, getServer("1"), getServer("0"));
                 }
             }
         } catch (IOException e) {
