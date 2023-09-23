@@ -8,7 +8,7 @@ import java.util.NoSuchElementException;
 import java.util.Random;
 
 public class Bingo extends Thread {
-    private final String[] BINGO = { "B", "I", "N", "G", "O" };
+
     static List<Bingo> serverList = new LinkedList<>();
     static String[] figures = { "O", "X" };
 
@@ -17,6 +17,9 @@ public class Bingo extends Thread {
 
     boolean[][] changed = new boolean[5][5];
     String[][] board = new String[5][5];
+    BingoBoard bingoBoard;
+    BingoCheck bingoCheck;
+
     String userName;
     String figure;
     Socket socket;
@@ -45,45 +48,6 @@ public class Bingo extends Thread {
         return figure;
     }
 
-    // 유저 이름으로 찾기
-    public Bingo getServer(String userName) {
-        for (Bingo server : serverList) {
-            if (server.getUserName().equals(userName)) {
-                return server;
-            }
-        }
-
-        throw new NoSuchElementException(userName + "은 존재하지 않는 이름입니다.\n");
-    }
-
-    // 자신의 보드 출력
-    public String showBoard() {
-        String s = "\n==============================\n";
-        for (int i = 0; i < 5; i++) {
-            for (int j = 0; j < 5; j++) {
-                String cellValue = String.valueOf(board[i][j]);
-                // 셀의 값이 한 자릿수일 때 앞에 공백 추가
-                if (cellValue.length() == 1) {
-                    cellValue = " " + cellValue;
-                }
-                // 셀의 값을 중앙 정렬하기 위해 공백 추가
-                int cellLength = cellValue.length();
-                int padding = (5 - cellLength) / 2;
-                for (int k = 0; k < padding; k++) {
-                    s += " ";
-                }
-                s += "[" + cellValue + "]";
-                for (int k = 0; k < 5 - cellLength - padding; k++) {
-                    s += " ";
-                }
-            }
-            s += "\n";
-        }
-        s += "==============================\n";
-
-        return s;
-    }
-
     public int getIndex(int num) {
         String tmp = String.valueOf(num);
         for (int i = 0; i < 5; i++) {
@@ -94,6 +58,17 @@ public class Bingo extends Thread {
             }
         }
         throw new IllegalArgumentException("잘못된 값을 입력했습니다.");
+    }
+
+    // 유저 이름으로 찾기
+    public Bingo getServer(String userName) {
+        for (Bingo server : serverList) {
+            if (server.getUserName().equals(userName)) {
+                return server;
+            }
+        }
+
+        throw new NoSuchElementException(userName + "은 존재하지 않는 이름입니다.\n");
     }
 
     @Override
@@ -135,8 +110,9 @@ public class Bingo extends Thread {
                 }
             }
 
-            send(showBoard());
+            bingoBoard = new BingoBoard(board); // 보드 클래스
 
+            send(bingoBoard.showBoard());
             setFigure(figures[Integer.parseInt(userName)]);
 
             String message = (figure.equals("O")) ? "선공입니다! (O)" : "후공입니다! (X)";
@@ -162,12 +138,20 @@ public class Bingo extends Thread {
 
     private void playGameInOrder(BufferedReader in, Bingo first, Bingo second) throws IOException {
         // 빙고가 완성되었다면
-        if (check(figure)) {
+        bingoCheck = new BingoCheck(board);
+
+        if (bingoCheck.check(figure)) {
             for (Bingo server : serverList) {
-                if (this.equals(server))
+                if (this.equals(server)) {
+                    getWinner();
                     server.send("\n당신의 승리입니다 축하합니다!!!!\n");
-                else
+                }
+
+                else {
+                    getWinner();
                     server.send("\n당신의 패배입니다 ㅠㅠㅠ 다음 기회를 노려보세요.\n");
+                }
+
             }
             System.exit(1);
         }
@@ -190,10 +174,16 @@ public class Bingo extends Thread {
             while (!validInput) {
                 try {
                     index = Integer.parseInt(in.readLine()); // 바꿀 숫자
+
+                    if (index < 1 || index > 25) {
+                        send("1~25 사이의 숫잔만 입력해주세요...\n");
+                        continue;
+                    }
+
                     int location = getIndex(index); // 입력된 위치의 숫자
 
                     // 유효한 입력인지 확인하고 중복된 입력이 아닌 경우에만 진행
-                    if (index >= 1 && index <= 25 && !changed[location / 5][location % 5]) {
+                    if (!changed[location / 5][location % 5]) {
                         validInput = true;
 
                         int secondLocation = second.getIndex(index);
@@ -219,9 +209,9 @@ public class Bingo extends Thread {
             // 바뀐 보드 보여주기
             for (Bingo server : serverList) {
                 if (server.equals(first))
-                    send(showBoard());
+                    send(bingoBoard.showBoard());
                 else {
-                    server.send(server.showBoard());
+                    server.send(server.bingoBoard.showBoard());
                 }
             }
 
@@ -233,90 +223,11 @@ public class Bingo extends Thread {
         }
     }
 
-    private boolean check(String figure) throws IOException {
-
-        // 가로 ("BINGO로 변경")
-        for (int i = 0; i < 5; i++) {
-            int cnt = 0;
-            for (int j = 0; j < 5; j++) {
-                if (board[i][j].equals(figure)) {
-                    cnt++;
-
-                    if (cnt == 5) {
-                        for (int k = 0; k < 5; k++) {
-                            board[i][k] = BINGO[k]; // BINGO!!
-                        }
-
-                        Bingo winner = this;
-                        for (Bingo server : serverList) {
-                            server.send(winner.showBoard());
-                        }
-                        return true;
-                    }
-                }
-            }
+    public void getWinner() throws IOException {
+        Bingo winner = this;
+        for (Bingo server : serverList) {
+            server.send(winner.bingoBoard.showBoard());
         }
-
-        // 세로
-        for (int j = 0; j < 5; j++) {
-            int cnt = 0;
-            for (int i = 0; i < 5; i++) {
-                if (board[i][j].equals(figure))
-                    cnt++;
-            }
-
-            if (cnt == 5) {
-                for (int k = 0; k < 5; k++) {
-                    board[k][j] = BINGO[k]; // BINGO!!
-                }
-
-                Bingo winner = this;
-                for (Bingo server : serverList) {
-                    server.send(winner.showBoard());
-                }
-                return true;
-            }
-        }
-        // 좌 대각선
-        int cnt = 0;
-        for (int i = 0; i < 5; i++) {
-            if (board[i][i].equals(figure))
-                cnt++;
-
-            if (cnt == 5) {
-                for (int j = 0; j < 5; j++) {
-                    board[j][j] = BINGO[j];
-                }
-
-                Bingo winner = this;
-                for (Bingo server : serverList) {
-                    server.send(winner.showBoard());
-                }
-                return true;
-            }
-        }
-
-        // 우 대각선
-        cnt = 0;
-        for (int i = 0, j = 4; i < 5; i++, j--) {
-
-            if (board[i][j].equals(figure))
-                cnt++;
-
-            if (cnt == 5) {
-                for (int k = 0, l = 4; k < 5; k++, l--) {
-                    board[k][l] = BINGO[k]; // BINGO!!
-                }
-
-                Bingo winner = this;
-                for (Bingo server : serverList) {
-                    server.send(winner.showBoard());
-                }
-                return true;
-            }
-        }
-
-        return false;
     }
 
     // 무승부 선언 (게임 종료)
