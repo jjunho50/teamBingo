@@ -70,7 +70,7 @@ public class Bingo {
     }
 
     // 게임 종료 검사
-    private boolean check(String[][] array) {
+    private boolean check() {
         // 가로
         for (int i = 0; i < size; i++) {
             int count = 0;
@@ -153,10 +153,17 @@ public class Bingo {
         bingo.inputO("3");
         System.out.println(bingo);
 
-        bingo.inputX("4");
+        bingo.inputO("4");
         System.out.println(bingo);
 
-        bingo.inputO("4");
+        bingo.inputO("5");
+        System.out.println(bingo);
+
+        bingo.inputO("1");
+        System.out.println(bingo);
+
+        bingo.inputO("2");
+        bingo.check();
         System.out.println(bingo);
 
     }
