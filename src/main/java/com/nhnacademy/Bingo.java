@@ -175,27 +175,28 @@ public class Bingo extends Thread {
                 try {
                     index = Integer.parseInt(in.readLine()); // 바꿀 숫자
 
-                    if (index < 1 || index > 25) {
-                        send("1~25 사이의 숫잔만 입력해주세요...\n");
-                        continue;
-                    }
+                    // 입력값의 범위를 확인
+                    if (index >= 1 && index <= 25) {
+                        int location = getIndex(index); // 입력된 위치의 숫자
 
-                    int location = getIndex(index); // 입력된 위치의 숫자
+                        // 유효한 입력인지 확인하고 중복된 입력이 아닌 경우에만 진행
+                        if (!changed[location / 5][location % 5]) {
+                            validInput = true;
 
-                    // 유효한 입력인지 확인하고 중복된 입력이 아닌 경우에만 진행
-                    if (!changed[location / 5][location % 5]) {
-                        validInput = true;
+                            int secondLocation = second.getIndex(index);
+                            changed[location / 5][location % 5] = true; // 해당 셀은 변경됨.
+                            second.changed[secondLocation / 5][secondLocation % 5] = true; // 다른 플레이어의 셀도 변경
 
-                        int secondLocation = second.getIndex(index);
-                        changed[location / 5][location % 5] = true; // 해당 셀은 변경됨.
-                        second.changed[secondLocation / 5][secondLocation % 5] = true; // 다른 플레이어의 셀도 변경
+                            board[location / 5][location % 5] = figure; // 내 보드 변경
+                            second.board[secondLocation / 5][secondLocation % 5] = figure; // 다른 플레이어 보드 변경
 
-                        board[location / 5][location % 5] = figure; // 내 보드 변경
-                        second.board[secondLocation / 5][secondLocation % 5] = figure; // 다른 플레이어 보드 변경
-
+                        } else {
+                            if (this.equals(first))
+                                send("잘못된 입력입니다. 다시 입력하세요: ");
+                        }
                     } else {
                         if (this.equals(first))
-                            send("잘못된 입력입니다. 다시 입력하세요: ");
+                            send("1에서 25 사이의 숫자를 입력하세요: ");
                     }
                 } catch (NumberFormatException e) {
                     // 숫자로 변환할 수 없는 입력 처리
