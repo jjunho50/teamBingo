@@ -1,18 +1,13 @@
 package com.nhnacademy;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.OutputStreamWriter;
-import java.net.ServerSocket;
+import java.io.*;
 import java.net.Socket;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Random;
 
-class Bingo extends Thread {
+public class Bingo extends Thread {
     private final String[] BINGO = { "B", "I", "N", "G", "O" };
     static List<Bingo> serverList = new LinkedList<>();
     static String[] figures = { "O", "X" };
@@ -106,7 +101,18 @@ class Bingo extends Thread {
     public void run() {
         try (BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
                 BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()))) {
-            this.out = out; // Why?
+            this.out = out;
+
+            synchronized (serverList) {
+                if (serverList.size() < 2) {
+                    send("다른 플레이어의 접속을 기다리는중...\n");
+                    serverList.wait();
+                }
+
+                if (serverList.size() == 2) {
+                    serverList.notifyAll();
+                }
+            }
 
             while (!Thread.currentThread().isInterrupted()) {
                 if (serverList.size() == 1) {
@@ -155,6 +161,8 @@ class Bingo extends Thread {
                 }
             }
         } catch (IOException e) {
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
         try {
             socket.close();
@@ -217,7 +225,6 @@ class Bingo extends Thread {
                         printOnlyOne = true;
                     }
                 }
-
             }
 
             // 바뀐 보드 보여주기
@@ -258,7 +265,6 @@ class Bingo extends Thread {
                         return true;
                     }
                 }
-
             }
         }
 
@@ -330,27 +336,5 @@ class Bingo extends Thread {
             server.send("비겼습니다. 게임을 종료합니다!\n");
         }
         System.exit(1);
-    }
-
-    public static void main(String[] args) {
-        int port = 1234;
-        List<Bingo> serverList = new LinkedList<>();
-
-        try (ServerSocket serverSocket = new ServerSocket(port)) {
-            while (!Thread.currentThread().isInterrupted()) {
-                Socket socket = serverSocket.accept();
-
-                // 두 명의 참가자만 허용
-                if (serverList.size() < 2) {
-                    Bingo server = new Bingo(socket);
-                    server.start();
-                    serverList.add(server);
-                } else {
-                    // 이미 두 명의 참가자가 있는 경우, 새로운 연결을 거부
-                    socket.close();
-                }
-            }
-        } catch (Exception e) {
-        }
     }
 }
