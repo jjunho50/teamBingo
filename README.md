@@ -4,6 +4,8 @@
 빙고판의 크기를 생성자로 지정할 수 있도록 변경
 
 수정 계획
+bingoserver를 새로 만들어
+
 n명의 참가자를 static serverList로 관리하여
 1번 참가자가 start를 누르기 전 까지 계속 받도록 변경
 
