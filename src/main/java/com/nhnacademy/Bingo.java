@@ -192,16 +192,16 @@ public class Bingo extends Thread {
 
                         } else {
                             if (this.equals(first))
-                                send("잘못된 입력입니다. 다시 입력하세요: ");
+                                send("\n잘못된 입력입니다. 다시 입력하세요: ");
                         }
                     } else {
                         if (this.equals(first))
-                            send("1에서 25 사이의 숫자를 입력하세요: ");
+                            send("\n1에서 25 사이의 숫자를 입력하세요: ");
                     }
                 } catch (NumberFormatException e) {
                     // 숫자로 변환할 수 없는 입력 처리
                     if (this.equals(first) && !printOnlyOne) {
-                        send("숫자를 입력하세요: ");
+                        send("\n숫자를 입력하세요: ");
                         printOnlyOne = true;
                     }
                 }
