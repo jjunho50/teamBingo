@@ -40,6 +40,7 @@ public class Bingo extends Thread {
         this.size = 5;
         changed = new boolean[5][5];
         board = new String[5][5];
+        roomSize = 10;
     }
 
     public void setSize(int n) {
@@ -101,23 +102,26 @@ public class Bingo extends Thread {
                         size = Integer.parseInt(in.readLine());
                         send("대전 방의 크기를 지정해 주세요");
                         roomSize = Integer.parseInt(in.readLine());
+                        for (Bingo bingo : serverList) {
+                            bingo.roomSize = roomSize;
+                        }
                     }
 
-                    if (serverList.size() < roomSize) {
+                    if (serverList.size() < serverList.get(0).roomSize) {
                         send("다른 플레이어의 접속을 기다리는중...\n");
                         serverList.wait();
                     }
 
-                    if (serverList.size() >= roomSize) {
+                    if (serverList.size() >= serverList.get(0).roomSize) {
                         serverList.notifyAll();
                     }
 
-                    // if (serverList.size() > roomSize) {
-                    // send(userName);
-                    // send("방이 꽉 찼습니다.");
-                    // socket.close();
-                    // serverList.remove(this);
-                    // }
+                    if (serverList.indexOf(this) >= serverList.get(0).roomSize) {
+                        send(getUserName());
+                        send("방이 꽉 찼습니다.");
+                        socket.close();
+                        serverList.remove(this);
+                    }
                 } catch (NumberFormatException e) {
                     send("숫자를 입력해주세요");
                 }
