@@ -108,7 +108,7 @@ public class Bingo extends Thread {
                         serverList.wait();
                     }
 
-                    if (serverList.size() == roomSize) {
+                    if (serverList.size() >= roomSize) {
                         serverList.notifyAll();
                     }
 
