@@ -40,7 +40,7 @@ public class Bingo extends Thread {
         this.size = 5;
         changed = new boolean[5][5];
         board = new String[5][5];
-        roomSize = 10;
+        roomSize = 2;
     }
 
     public void setSize(int n) {
@@ -100,11 +100,11 @@ public class Bingo extends Thread {
                     if (serverList.size() == 1) {
                         send("빙고판의 크기를 지정해 주세요");
                         size = Integer.parseInt(in.readLine());
-                        send("대전 방의 크기를 지정해 주세요");
-                        roomSize = Integer.parseInt(in.readLine());
-                        for (Bingo bingo : serverList) {
-                            bingo.roomSize = roomSize;
-                        }
+                        // send("대전 방의 크기를 지정해 주세요");
+                        // roomSize = Integer.parseInt(in.readLine());
+                        // for (Bingo bingo : serverList) {
+                        // bingo.roomSize = roomSize;
+                        // }
                     }
 
                     if (serverList.size() < serverList.get(0).roomSize) {
@@ -116,12 +116,12 @@ public class Bingo extends Thread {
                         serverList.notifyAll();
                     }
 
-                    if (serverList.indexOf(this) >= serverList.get(0).roomSize) {
-                        send(getUserName());
-                        send("방이 꽉 찼습니다.");
-                        socket.close();
-                        serverList.remove(this);
-                    }
+                    // if (serverList.indexOf(this) >= serverList.get(0).roomSize) {
+                    // send(getUserName());
+                    // send("방이 꽉 찼습니다.");
+                    // socket.close();
+                    // serverList.remove(this);
+                    // }
                 } catch (NumberFormatException e) {
                     send("숫자를 입력해주세요");
                 }
@@ -140,23 +140,7 @@ public class Bingo extends Thread {
                 }
             }
 
-            // 1~n*n의 숫자 섞기
-            Random rd = new Random();
-            for (int i = 0; i < size; i++) {
-                for (int j = 0; j < size; j++) {
-                    int a = rd.nextInt(size);
-                    int b = rd.nextInt(size);
-
-                    String tmp;
-                    tmp = board[i][j];
-                    board[i][j] = board[a][b];
-                    board[a][b] = tmp;
-                }
-            }
-
-            bingoBoard = new BingoBoard(board); // 보드 클래스
-
-            send(bingoBoard.showBoard());
+            // 1~n*n의 숫자 섞기50
             setFigure(figures[Integer.parseInt(userName)]);
 
             String message = (figure.equals("O")) ? "선공입니다! (O)" : "후공입니다! (X)";
