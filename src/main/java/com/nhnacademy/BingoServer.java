@@ -15,7 +15,7 @@ public class BingoServer {
                 Socket socket = serverSocket.accept();
 
                 // 두 명의 참가자만 허용
-                if (serverCounter.size() < 2) {
+                if (serverCounter.size() < 50) {
                     Bingo server = new Bingo(socket);
                     server.start();
                     serverCounter.add(server);
